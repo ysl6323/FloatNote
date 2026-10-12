@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f3ed">
+  <meta name="description" content="Floatnote is a quiet, bilingual task canvas. Notes drift toward their deadlines. A single HTML file, saved locally.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='8' width='20' height='22' rx='3' fill='%23c6d5d8'/%3E%3Crect x='11' y='2' width='18' height='23' rx='3' fill='%23e2c3b9'/%3E%3C/svg%3E">
+  <title>浮笺 · Floatnote</title>
+  <style>
+:root {
+  --ink: #394743;
+  --muted: #77817a;
+  --edge: #dcded5;
+  --bg: #f4f3ed;
+  --panel: #fcfbf7;
+  --shadow: 0 14px 32px #3b4b4214, 0 2px 5px #3b4b4209;
+  --accent: #748f81;
+  --header-height: 124px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+body { background: var(--bg); color: var(--ink); font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 15px; -webkit-font-smoothing: antialiased; }
+button, input, select { font: inherit; }
+button { cursor: pointer; color: inherit; border: 0; background: transparent; }
+button:disabled { cursor: default; opacity: .43; }
+button, input, select { outline: none; }
+button:focus-visible, input:focus-visible, select:focus-visible, [contenteditable]:focus-visible { outline: 2px solid #77958a; outline-offset: 3px; }
+svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+[hidden] { display: none !important; }
+.icon-symbols { position: absolute; width: 0; height: 0; overflow: hidden; }
+.app { position: relative; height: 100%; isolation: isolate; }
+
+/* A quiet, compact workspace header. */
+.topbar { height: var(--header-height); position: absolute; inset: 0 0 auto; z-index: 30; display: grid; grid-template-columns: minmax(180px, 1fr) minmax(190px, auto) minmax(250px, 1fr); align-items: center; gap: 22px; padding: 0 34px; border-bottom: 1px solid #deded4; background: #f4f3edf2; backdrop-filter: blur(18px); }
+.brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.brand > div:last-child { min-width: 0; }
+.brand-icon { width: 36px; height: 40px; position: relative; flex-shrink: 0; }
+.brand-icon:before, .brand-icon:after { content: ""; position: absolute; width: 25px; height: 29px; border: 1px solid #fff9; border-radius: 3px 7px 3px 3px; box-shadow: 0 3px 7px #44545a12; }
+.brand-icon:before { left: 0; top: 8px; background: #c6d5d8; transform: rotate(-12deg); }
+.brand-icon:after { left: 10px; top: 2px; background: #e2c3b9; transform: rotate(8deg); }
+h1 { font-size: 29px; letter-spacing: .025em; margin: 0; font-weight: 600; line-height: 1.2; }
+html[lang^="zh"] h1 { letter-spacing: .1em; }
+.brand-sub { font-size: 12px; letter-spacing: .15em; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+.brand-philosophy { font-size: 13px; font-weight: 400; color: #737e76; line-height: 1.55; margin: 6px 0 0; max-width: 280px; text-wrap: pretty; }
+.top-center { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; color: var(--muted); }
+.clock-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.clock-label { font-size: 13px; color: #707d71; letter-spacing: .01em; }
+.clock-time { font-size: 34px; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: .035em; color: #4e6559; line-height: 1.1; white-space: nowrap; }
+.clock-date { display: flex; align-items: center; justify-content: center; gap: 7px; color: #7c8578; font-size: 13px; line-height: 1.5; white-space: nowrap; }
+.status-dot { width: 5px; height: 5px; background: #91a38d; border-radius: 50%; flex-shrink: 0; }
+.timezone-trigger { display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 13px; color: #697c6e; padding: 5px 7px; border-radius: 6px; border: 1px solid transparent; white-space: nowrap; }
+.timezone-trigger:hover, .timezone-trigger[aria-expanded="true"] { background: #e8ece3; border-color: #d9e0d3; }
+.timezone-trigger svg { width: 12px; height: 12px; }
+.toolbar { justify-self: end; display: flex; gap: 7px; align-items: center; min-width: 0; }
+.tool-btn { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 9px; color: #6f7b72; flex-shrink: 0; transition: background .15s, color .15s; }
+.tool-btn:hover { background: #e6e9e0; color: #405b4c; }
+.language-switch { display: inline-flex; align-items: center; padding: 3px; border: 1px solid #dce0d4; border-radius: 9px; background: #eaece4; flex-shrink: 0; }
+.language-switch button { min-width: 39px; height: 31px; padding: 0 7px; color: #798375; font-size: 13px; font-weight: 500; border-radius: 6px; white-space: nowrap; transition: background .15s, color .15s, box-shadow .15s; }
+.language-switch button:hover { color: #405c4c; }
+.language-switch button.active { background: #fbfcf7; color: #425e4b; box-shadow: 0 1px 4px #40523c12; }
+.add-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 9px 13px; border: 1px solid #cbd7c8; border-radius: 9px; background: #e2e9dd; color: #425c43; font-size: 14px; font-weight: 500; white-space: nowrap; flex-shrink: 0; transition: background .15s, box-shadow .15s; }
+.add-btn:hover { background: #d7e2d0; box-shadow: 0 3px 10px #687b5010; }
+.add-btn svg { width: 15px; height: 15px; }
+
+.board { position: absolute; inset: var(--header-height) 0 0; z-index: 1; overflow: hidden; touch-action: none; isolation: isolate; background-image: radial-gradient(#929e8c22 .75px, transparent .75px), radial-gradient(ellipse at 50% 0%, #e5bcb722, transparent 54%), radial-gradient(ellipse at 50% 100%, #b9d1d72e, transparent 60%); background-size: 24px 24px, 100% 100%, 100% 100%; }
+.finish { position: absolute; top: 0; left: 44px; right: 44px; height: 44px; pointer-events: none; color: #8a7d73; z-index: 0; }
+.finish:after { content: ""; position: absolute; left: 0; right: 0; top: 42px; border-top: 1px dashed #bca39980; }
+.finish-label { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 15px; line-height: 1.5; }
+.finish-label i { display: block; width: 5px; height: 5px; border-radius: 50%; background: #bd9c92; }
+.finish-caption { position: absolute; right: 0; top: 15px; font-size: 13px; line-height: 1.5; color: #8e847b; }
+.priority-axis { position: absolute; left: 16px; top: 98px; bottom: 105px; width: 18px; display: flex; flex-direction: column; align-items: center; gap: 13px; pointer-events: none; color: #7e8a7a; font-size: 12px; line-height: 1.3; z-index: 0; }
+.axis-line { flex: 1; width: 2px; min-height: 25px; border-radius: 10px; background: linear-gradient(#d7b0a9b3, #d6d7bcb3, #aec8d3b3); }
+.priority-axis .axis-low { writing-mode: vertical-rl; }
+.empty { position: absolute; top: 46%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; transition: opacity .2s; width: min(400px, calc(100% - 54px)); }
+.empty.hidden { opacity: 0; }
+.empty-illustration { height: 95px; width: 122px; margin: 0 auto 24px; position: relative; }
+.empty-sheet { width: 64px; height: 77px; position: absolute; top: 10px; left: 26px; border: 1px solid #dce3d9; box-shadow: 0 9px 15px #454f4510; border-radius: 5px 12px 5px 5px; background: #e4ebe5; transform: rotate(-14deg); }
+.empty-sheet.two { background: #ece2d8; transform: rotate(12deg); left: 45px; top: 3px; border-color: #fff9; }
+.empty-sheet.two:before, .empty-sheet.two:after { content: ""; position: absolute; left: 13px; top: 26px; width: 34px; height: 1px; background: #aaa99573; }
+.empty-sheet.two:after { top: 35px; width: 24px; }
+.empty-title { font-size: 22px; font-weight: 500; letter-spacing: .01em; color: #5f7364; line-height: 1.5; }
+.empty-desc { font-size: 15px; color: #7b897c; margin: 10px 0 0; line-height: 1.8; }
+.empty-tip { margin-top: 20px; font-size: 13px; color: #8a9586; line-height: 1.6; }
+
+/* The paper stays light; metadata remains legible. */
+.note { position: absolute; width: 308px; min-height: 204px; padding: 17px 19px 14px; background: var(--note-color, #d0dfe7); border: 1px solid #ffffffa3; border-radius: 7px 16px 7px 7px; box-shadow: var(--shadow); cursor: grab; user-select: none; touch-action: none; transition: box-shadow .2s, transform .2s; transform-origin: 50% 70%; }
+.note:before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(145deg, #ffffff29, #ffffff00 75%); }
+.note:after { content: ""; position: absolute; right: 0; top: 0; width: 17px; height: 17px; background: linear-gradient(45deg, #ffffff08 50%, #fff7 51%); border-radius: 0 15px 0 5px; pointer-events: none; }
+.note:hover { box-shadow: 0 18px 36px #3c484921, 0 3px 8px #3c484911; }
+.note.dragging { transform: rotate(-1deg) scale(1.018); box-shadow: 0 25px 44px #3c484927, 0 4px 12px #3c484913; cursor: grabbing; z-index: 900 !important; }
+.note.arrived { border-color: #b57e7266; }
+.note.new { animation: appear .24s ease-out; }
+@keyframes appear { from { opacity: 0; transform: scale(.96) translateY(7px); } to { opacity: 1; transform: none; } }
+.note-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; position: relative; color: #596b60; min-height: 25px; }
+.created { font-size: 13px; letter-spacing: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ddl-btn { display: flex; align-items: center; gap: 4px; font-size: 13px; padding: 5px 6px; border-radius: 6px; color: #5d6c62; max-width: 148px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ddl-btn span { overflow: hidden; text-overflow: ellipsis; }
+.ddl-btn svg { width: 12px; height: 12px; }
+.ddl-btn:hover, .ddl-btn.active { background: #ffffff48; color: #354b3e; }
+.ddl-btn.has-ddl { color: #4f6656; }
+.note.arrived .ddl-btn { color: #85594e; }
+.note-title { position: relative; margin-top: 15px; min-height: 72px; max-height: 180px; overflow: auto; font-size: 21px; font-weight: 550; line-height: 1.6; letter-spacing: .005em; user-select: text; cursor: text; white-space: pre-wrap; overflow-wrap: anywhere; outline: none !important; color: #35463d; }
+.note-title:empty:before { content: attr(data-placeholder); color: #687a6a; pointer-events: none; font-weight: 400; }
+.note-title:focus { border-radius: 3px; background: #ffffff1c; }
+.note-footer { display: flex; justify-content: space-between; align-items: center; gap: 5px; margin-top: 9px; position: relative; min-height: 25px; }
+.motion-label { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #596d5d; line-height: 1.4; }
+.motion-label .dot { width: 4px; height: 4px; border-radius: 50%; background: #718579; flex-shrink: 0; }
+.note.arrived .motion-label { color: #815c50; }
+.note-actions { display: flex; gap: 2px; align-items: center; flex-shrink: 0; }
+.note-action { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 6px; color: #526e59; opacity: .75; transition: background .15s, opacity .15s; }
+.note:hover .note-action, .note:focus-within .note-action { opacity: 1; }
+.note-action:hover { background: #ffffff54; color: #34523c; }
+.note-action svg { width: 16px; height: 16px; }
+.note-grip { height: 10px; width: 10px; opacity: .25; position: absolute; bottom: 12px; left: calc(50% - 5px); background: radial-gradient(#4b6659 1px, transparent 1px); background-size: 4px 4px; pointer-events: none; }
+
+.bottom-bar { position: absolute; bottom: 25px; left: 44px; z-index: 20; display: flex; gap: 19px; align-items: center; font-size: 13px; line-height: 1.5; color: #788575; pointer-events: none; }
+.save-state { display: flex; align-items: center; gap: 6px; }
+.save-state svg { width: 12px; height: 12px; }
+.board-count { color: #5c745d; white-space: nowrap; }
+.count-number { font-size: 15px; font-weight: 600; margin-right: 5px; font-variant-numeric: tabular-nums; }
+.bottom-tip { color: #86907e; }
+.archive { position: absolute; right: 28px; bottom: 22px; z-index: 40; width: 314px; background: #fafbf5ed; border: 1px solid #d9dfd1; border-radius: 12px; box-shadow: 0 7px 24px #4852440e; backdrop-filter: blur(20px); overflow: hidden; }
+.archive-toggle { width: 100%; min-height: 52px; display: flex; align-items: center; gap: 9px; padding: 0 16px; font-size: 14px; text-align: left; }
+.archive-toggle:hover { background: #edf0e770; }
+.archive-toggle > svg { color: #7a8d73; width: 15px; height: 15px; }
+.archive-name { flex: 1; font-weight: 500; color: #566d50; }
+.archive-badge { padding: 3px 8px; border-radius: 6px; background: #e9eee2; color: #718267; font-size: 13px; line-height: 1.4; font-variant-numeric: tabular-nums; }
+.archive-chevron { transition: transform .2s; }
+.archive.open .archive-chevron { transform: rotate(180deg); }
+.archive-body { border-top: 1px solid #e0e5d7; padding: 8px; max-height: min(370px, 52vh); overflow: auto; }
+.archive-empty { padding: 25px 13px 28px; text-align: center; color: #7e8c73; font-size: 13px; line-height: 1.8; }
+.archive-empty svg { display: block; margin: 0 auto 10px; width: 24px; height: 24px; color: #a8b698; }
+.archive-item { display: flex; gap: 9px; align-items: center; padding: 11px 8px; border-radius: 8px; }
+.archive-item + .archive-item { border-top: 1px solid #e1e5d977; }
+.archive-item:hover { background: #eaf0e16e; }
+.archive-swatch { width: 4px; height: 30px; border-radius: 3px; flex-shrink: 0; }
+.archive-copy { min-width: 0; flex: 1; }
+.archive-title { font-size: 14px; line-height: 1.5; color: #5f7456; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.archive-time { font-size: 13px; color: #86957b; margin-top: 4px; }
+.archive-actions { display: flex; gap: 2px; }
+.archive-action { width: 30px; height: 32px; display: grid; place-items: center; border-radius: 6px; color: #80936f; }
+.archive-action svg { width: 13px; height: 13px; }
+.archive-action:hover { background: #dce7d057; color: #526f3e; }
+
+.popup { position: fixed; z-index: 1000; background: #fcfbf7; border: 1px solid #dce0d3; border-radius: 12px; box-shadow: 0 16px 46px #3b4b3b24, 0 2px 7px #3b4b3b0b; animation: popup-in .13s ease-out; }
+@keyframes popup-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.menu { width: 224px; padding: 6px; }
+.menu-caption { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: #849176; padding: 9px 10px 6px; }
+.menu-item { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; padding: 10px; border-radius: 7px; font-size: 14px; color: #5f7353; line-height: 1.5; }
+.menu-item svg { width: 14px; height: 14px; }
+.menu-item:hover { background: #e7eddf91; }
+.menu-item.primary { color: #466943; }
+.menu-item.danger { color: #9b7668; }
+.menu-item.danger:hover { background: #f0e2da91; }
+.menu-divider { height: 1px; background: #e4e8db; margin: 5px; }
+.deadline-popup { width: 348px; max-width: calc(100vw - 24px); padding: 19px; }
+.popup-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; font-size: 16px; font-weight: 550; color: #4e6947; line-height: 1.5; }
+.popup-heading button { color: #8a997d; display: grid; place-items: center; padding: 3px; border-radius: 5px; }
+.popup-heading button:hover { background: #e9edde; color: #60764d; }
+.popup-heading svg { width: 14px; height: 14px; }
+.deadline-input { width: 100%; min-height: 43px; background: #f2f5ec; border: 1px solid #d4dec9; border-radius: 7px; padding: 9px; color: #4d6843; font-size: 14px; color-scheme: light; }
+.quick-times { display: flex; gap: 5px; margin: 9px 0 13px; }
+.quick-times button { flex: 1; font-size: 13px; line-height: 1.4; padding: 7px 3px; border-radius: 6px; background: #edf2e5; color: #768b60; }
+.quick-times button:hover { background: #e0ebd2; color: #5e7649; }
+.deadline-explainer { font-size: 13px; line-height: 1.8; color: #7d8c6d; margin: 0 0 15px; }
+.deadline-zone { font-size: 13px; line-height: 1.5; color: #778a65; margin: 0 0 8px; }
+.deadline-error { font-size: 13px; line-height: 1.6; color: #a26352; margin: 9px 0 0; }
+.deadline-footer { display: flex; justify-content: space-between; gap: 15px; align-items: center; }
+.clear-ddl { color: #957665; font-size: 13px; padding: 6px 0; }
+.clear-ddl:hover { color: #805944; }
+.confirm-btn { background: #78906e; color: #fff; padding: 9px 14px; border-radius: 7px; font-size: 14px; white-space: nowrap; }
+.confirm-btn:hover { background: #687f5e; }
+.ambiguity-control { display: flex; flex-direction: column; gap: 7px; margin: 12px 0; padding: 10px; border: 1px solid #d8dfcc; border-radius: 7px; background: #f0f4e8; }
+.ambiguity-control label { font-size: 13px; color: #6f845b; line-height: 1.6; }
+.ambiguity-control select { width: 100%; min-height: 34px; padding: 6px; font-size: 13px; border: 1px solid #d1dbc3; border-radius: 5px; background: #fafcf5; color: #587147; }
+.timezone-popup { width: 368px; max-width: calc(100vw - 24px); padding: 20px; }
+.timezone-popup select { width: 100%; min-height: 43px; padding: 9px 10px; border: 1px solid #d2dcc6; border-radius: 7px; background: #f2f5eb; color: #4f6747; font-size: 14px; }
+.timezone-popup label { display: block; margin: 0 0 8px; font-size: 13px; color: #738766; line-height: 1.5; }
+.zone-current { margin-top: 12px; padding: 11px 12px; border-radius: 7px; background: #edf2e4; color: #5e764c; font-size: 14px; line-height: 1.8; font-variant-numeric: tabular-nums; }
+.zone-current strong, .zone-current time { font-weight: 500; }
+.settings-note { margin: 11px 0 0; color: #7a8a6c; font-size: 13px; line-height: 1.75; }
+.timezone-popup footer, .timezone-popup .timezone-footer { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 17px; padding-top: 13px; border-top: 1px solid #e1e7d6; }
+
+.overlay { position: fixed; inset: 0; background: #39453632; backdrop-filter: blur(5px); z-index: 2000; display: grid; place-items: center; padding: 20px; }
+.help { width: min(500px, 100%); max-height: calc(100dvh - 40px); overflow: auto; background: #fbfcf5; border: 1px solid #fff9; border-radius: 17px; box-shadow: 0 30px 90px #34432d30; padding: 28px; }
+.help-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.help h2 { font-size: 25px; font-weight: 500; margin: 0; color: #4c6941; line-height: 1.4; }
+.help-sub { font-size: 14px; color: #7c906b; margin: 9px 0 25px; line-height: 1.7; }
+.help-row { display: flex; gap: 14px; align-items: flex-start; margin: 16px 0; font-size: 14px; color: #718860; line-height: 1.8; }
+.help-row svg { width: 17px; height: 17px; margin-top: 3px; color: #8ca477; }
+.help-row strong { font-weight: 500; color: #506f40; }
+.help-footer { border-top: 1px solid #dfe8d2; margin-top: 24px; padding-top: 16px; font-size: 13px; color: #80946e; line-height: 1.9; }
+.toast { position: fixed; bottom: 31px; left: 50%; z-index: 3000; transform: translate(-50%, 10px); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; background: #52684beF; color: #f8fbf4; padding: 11px 17px; border-radius: 9px; font-size: 14px; line-height: 1.6; box-shadow: 0 5px 25px #394b3320; max-width: calc(100vw - 40px); text-align: center; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 1100px) {
+  .topbar { grid-template-columns: minmax(175px, 1fr) auto auto; gap: 17px; padding: 0 25px; }
+  .brand { gap: 10px; }
+  .brand-philosophy { max-width: 220px; }
+  .clock-time { font-size: 31px; }
+  .clock-row { gap: 6px; }
+  .toolbar { gap: 4px; }
+  .bottom-tip { display: none; }
+}
+@media (max-width: 900px) {
+  .topbar { gap: 12px; padding: 0 20px; grid-template-columns: minmax(154px, 1fr) auto auto; }
+  .brand-icon { width: 30px; transform: scale(.86); transform-origin: left center; margin-right: -3px; }
+  .brand-philosophy { max-width: 190px; font-size: 12px; }
+  .brand-sub { font-size: 12px; letter-spacing: .08em; }
+  .clock-row { flex-direction: column; gap: 1px; }
+  .clock-time { font-size: 29px; }
+  .clock-date { font-size: 12px; }
+  .timezone-trigger { padding: 3px 5px; }
+  .add-btn { padding: 8px 10px; font-size: 13px; }
+  .tool-btn { width: 31px; height: 33px; }
+}
+@media (max-width: 760px) {
+  :root { --header-height: 166px; }
+  .topbar { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; gap: 9px 14px; padding: 14px 23px 12px; }
+  .brand { grid-column: 1; grid-row: 1; }
+  .brand-icon { width: 31px; }
+  h1 { font-size: 28px; }
+  .brand-sub { display: none; }
+  .brand-philosophy { max-width: 260px; font-size: 13px; margin-top: 4px; line-height: 1.4; }
+  .toolbar { grid-column: 2; grid-row: 1; gap: 4px; }
+  .top-center { grid-column: 1 / -1; grid-row: 2; flex-direction: row; gap: 12px; justify-self: center; }
+  .clock-row { flex-direction: row; gap: 8px; }
+  .clock-time { font-size: 28px; }
+  .clock-date { font-size: 13px; }
+  .timezone-trigger { font-size: 13px; }
+  .finish { left: 30px; right: 30px; }
+  .finish-caption { display: none; }
+  .priority-axis { left: 9px; }
+  .bottom-bar { left: 30px; gap: 8px 12px; max-width: calc(100vw - 354px); flex-wrap: wrap; }
+  .archive { right: 20px; width: 292px; }
+}
+@media (max-width: 520px) {
+  :root { --header-height: 184px; }
+  .topbar { grid-template-columns: minmax(0, 1fr) minmax(142px, auto); grid-template-rows: minmax(100px, 1fr) 39px; gap: 9px 12px; padding: 12px 17px 15px; }
+  .brand { grid-column: 1; grid-row: 1; align-items: flex-start; gap: 7px; }
+  .brand-icon { width: 25px; height: 35px; transform: scale(.73); margin-top: 2px; margin-right: -6px; }
+  h1 { font-size: 25px; line-height: 1.2; }
+  .brand-philosophy { max-width: 190px; margin-top: 5px; font-size: 13px; line-height: 1.4; }
+  .top-center { grid-column: 2; grid-row: 1; flex-direction: column; gap: 3px; justify-self: end; align-self: center; }
+  .clock-row { flex-direction: column; gap: 1px; }
+  .clock-time { font-size: 28px; letter-spacing: .02em; }
+  .clock-date { font-size: 12px; }
+  .timezone-trigger { padding: 3px 5px; font-size: 13px; }
+  .toolbar { grid-column: 1 / -1; grid-row: 2; justify-self: end; gap: 6px; }
+  .language-switch { padding: 2px; }
+  .language-switch button { height: 31px; min-width: 39px; }
+  .tool-btn { width: 32px; height: 33px; }
+  .add-btn { min-height: 37px; padding: 7px 11px; font-size: 14px; }
+  .finish { left: 23px; right: 23px; }
+  .finish-label { font-size: 13px; }
+  .priority-axis { left: 5px; width: 14px; top: 94px; bottom: 92px; font-size: 12px; }
+  .note { width: 280px; padding: 15px 16px 13px; }
+  .created, .ddl-btn { font-size: 13px; }
+  .note-title { font-size: 21px; }
+  .motion-label { font-size: 13px; }
+  .bottom-bar { left: 22px; bottom: 22px; font-size: 12px; gap: 7px; max-width: calc(100vw - 266px); flex-direction: column; align-items: flex-start; }
+  .save-state { align-items: flex-start; }
+  .save-state svg { margin-top: 3px; }
+  .save-state svg { width: 11px; height: 11px; }
+  .archive { right: 16px; bottom: 16px; width: 218px; }
+  .archive-toggle { font-size: 13px; min-height: 51px; padding: 0 12px; gap: 7px; }
+  .archive-body { max-height: 46vh; }
+  .archive-item { gap: 6px; padding: 9px 5px; }
+  .archive-actions { gap: 0; }
+  .archive-action { width: 28px; }
+  .archive-time { font-size: 12px; }
+  .empty-title { font-size: 21px; }
+  .empty-desc { font-size: 14px; }
+  .empty-tip { font-size: 13px; }
+  .help { padding: 23px; }
+  .help h2 { font-size: 24px; }
+  .toast { bottom: 76px; max-width: calc(100vw - 32px); font-size: 13px; }
+}
+@media (max-width: 360px) {
+  .topbar { padding-left: 13px; padding-right: 13px; column-gap: 9px; }
+  .brand-icon { display: none; }
+  .brand-philosophy { font-size: 12px; }
+  .clock-time { font-size: 25px; }
+  .toolbar { gap: 4px; }
+  .note { width: 274px; }
+  .archive { width: 202px; right: 12px; }
+  .bottom-bar { left: 17px; max-width: calc(100vw - 242px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *:before, *:after { animation: none !important; transition: none !important; }
+}
+
+  </style>
+</head>
+<body>
+<svg class="icon-symbols" aria-hidden="true"><defs>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4 10-10"/></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r=".8"/><circle cx="12" cy="12" r=".8"/><circle cx="19" cy="12" r=".8"/></symbol>
+<symbol id="i-archive" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M9 12h6"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="m15 4 5 5-11 11-5 1 1-5L15 4ZM12 7l5 5"/></symbol>
+<symbol id="i-delete" viewBox="0 0 24 24"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></symbol>
+<symbol id="i-restore" viewBox="0 0 24 24"><path d="M4 9a8 8 0 1 1-1 6M4 4v5h5"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1 .6-1.5 1.2-1.5 2M12 17h.01"/></symbol>
+<symbol id="i-backup" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 17v4h16v-4"/></symbol>
+<symbol id="i-drag" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18m-9-9-3 3m3-3 3 3M3 12l3-3m-3 3 3 3m6 6-3-3m3 3 3-3m6-6-3-3m3 3-3 3"/></symbol>
+<symbol id="i-local" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+</defs></svg>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true"></div>
+      <div>
+        <h1 data-i18n="name">浮笺</h1>
+        <div class="brand-sub" data-i18n="subtitle">FLOATNOTE</div>
+        <p class="brand-philosophy" data-i18n="philosophy">时间让重要的事浮现。</p>
+      </div>
+    </div>
+    <div class="top-center">
+      <div class="clock-row">
+        <button class="timezone-trigger" id="timezoneBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="timezonePopup" data-i18n-title="timeZone" data-i18n-aria-label="timeZone"><span id="clockZoneName"></span><svg aria-hidden="true"><use href="#i-chevron"/></svg></button>
+        <time class="clock-time" id="clockTime" data-i18n-aria-label="clockLabel">--:--:--</time>
+      </div>
+      <div class="clock-date"><span class="status-dot" aria-hidden="true"></span><span id="todayLabel"></span><span style="color:#bec7b7">/</span><span id="clockZoneOffset"></span></div>
+    </div>
+    <div class="toolbar">
+      <div class="language-switch" role="group" data-i18n-aria-label="languageLabel">
+        <button type="button" data-language="zh" aria-pressed="true" lang="zh-CN">中文</button>
+        <button type="button" data-language="en" aria-pressed="false" lang="en">EN</button>
+      </div>
+      <button class="tool-btn" id="backupBtn" data-i18n-title="backup" data-i18n-aria-label="backup"><svg aria-hidden="true"><use href="#i-backup"/></svg></button>
+      <button class="tool-btn" id="helpBtn" data-i18n-title="help" data-i18n-aria-label="help"><svg aria-hidden="true"><use href="#i-help"/></svg></button>
+      <button class="add-btn" id="addBtn" data-i18n-aria-label="newNote"><svg aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="newNote">新建便签</span></button>
+    </div>
+  </header>
+  <main class="board" id="board" data-i18n-aria-label="boardLabel">
+    <div class="finish"><div class="finish-label"><i></i><span data-i18n="finish"></span></div><div class="finish-caption" data-i18n="finishHint"></div></div>
+    <div class="priority-axis" aria-hidden="true"><span data-i18n="high"></span><div class="axis-line"></div><span data-i18n="low"></span></div>
+    <div class="empty" id="emptyState">
+      <div class="empty-illustration" aria-hidden="true"><div class="empty-sheet"></div><div class="empty-sheet two"></div></div>
+      <div class="empty-title" data-i18n="emptyTitle"></div>
+      <p class="empty-desc" data-i18n="emptyDescription"></p>
+      <div class="empty-tip" data-i18n="emptyTip"></div>
+    </div>
+  </main>
+  <footer class="bottom-bar">
+    <span class="board-count"><span id="activeCount" hidden>0</span><span id="activeCountLabel">0 个待办</span></span>
+    <span class="save-state" id="saveState"><svg aria-hidden="true"><use href="#i-local"/></svg><span id="saveText" data-i18n="localSave"></span></span>
+    <span class="bottom-tip" data-i18n="boardHint"></span>
+  </footer>
+  <section class="archive" id="archive" data-i18n-aria-label="archived">
+    <button class="archive-toggle" id="archiveToggle" aria-expanded="false" aria-controls="archiveBody"><svg aria-hidden="true"><use href="#i-archive"/></svg><span class="archive-name" data-i18n="archived"></span><span class="archive-badge" id="archiveCount">0</span><svg class="archive-chevron" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+    <div class="archive-body" id="archiveBody" hidden></div>
+  </section>
+</div>
+<div class="popup menu" id="contextMenu" role="menu" hidden>
+  <div class="menu-caption" data-i18n="noteMenu"></div>
+  <button class="menu-item primary" data-action="complete" role="menuitem"><svg aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="complete"></span></button>
+  <button class="menu-item" data-action="edit" role="menuitem"><svg aria-hidden="true"><use href="#i-edit"/></svg><span data-i18n="edit"></span></button>
+  <button class="menu-item" data-action="deadline" role="menuitem"><svg aria-hidden="true"><use href="#i-clock"/></svg><span data-i18n="setDeadline"></span></button>
+  <div class="menu-divider"></div>
+  <button class="menu-item danger" data-action="delete" role="menuitem"><svg aria-hidden="true"><use href="#i-delete"/></svg><span data-i18n="deleteNote"></span></button>
+</div>
+<form class="popup deadline-popup" id="deadlinePopup" role="dialog" aria-labelledby="dueTitle" hidden>
+  <div class="popup-heading"><span id="dueTitle" data-i18n="dueHeading"></span><button type="button" id="closeDeadline" data-i18n-aria-label="close"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+  <p class="deadline-zone" id="deadlineZone"></p>
+  <input id="deadlineInput" class="deadline-input" type="datetime-local" required data-i18n-aria-label="deadlineInput" aria-describedby="deadlineZone deadlineError">
+  <p class="deadline-error" id="deadlineError" role="alert" hidden></p>
+  <div class="ambiguity-control" id="ambiguityControl" hidden><label for="ambiguitySelect" data-i18n="repeatedTime"></label><select id="ambiguitySelect"></select></div>
+  <div class="quick-times"><button type="button" data-time="hour" data-i18n="inHour"></button><button type="button" data-time="tonight" data-i18n="tonight"></button><button type="button" data-time="tomorrow" data-i18n="tomorrow"></button></div>
+  <p class="deadline-explainer" data-i18n="dueExplanation"></p>
+  <div class="deadline-footer"><button class="clear-ddl" type="button" id="clearDeadline" data-i18n="removeDeadline"></button><button class="confirm-btn" id="confirmDeadline" type="submit" data-i18n="confirmDeadline"></button></div>
+</form>
+<form class="popup timezone-popup" id="timezonePopup" role="dialog" aria-labelledby="timezoneTitle" hidden>
+  <div class="popup-heading"><span id="timezoneTitle" data-i18n="timeZoneHeading"></span><button id="closeTimezone" type="button" data-i18n-aria-label="close"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+  <label for="timezoneSelect" data-i18n="timeZone"></label><select id="timezoneSelect"></select>
+  <p class="settings-note" data-i18n="timeZoneNote"></p>
+  <footer class="timezone-footer"><button class="clear-ddl" type="button" id="resetTimezone" data-i18n="restoreDefault"></button><button class="confirm-btn" type="submit" data-i18n="apply"></button></footer>
+</form>
+<div class="popup menu" id="backupMenu" hidden><div class="menu-caption" data-i18n="backupMenu"></div><button class="menu-item" id="exportBtn"><svg aria-hidden="true"><use href="#i-backup"/></svg><span data-i18n="exportBackup"></span></button><button class="menu-item" id="importBtn"><svg style="transform:rotate(180deg)" aria-hidden="true"><use href="#i-backup"/></svg><span data-i18n="importBackup"></span></button></div>
+<input id="importFile" type="file" accept="application/json,.json" hidden>
+<div class="overlay" id="helpOverlay" hidden>
+  <section class="help" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="help-top"><h2 id="helpTitle" data-i18n="helpHeading"></h2><button class="tool-btn" id="closeHelp" data-i18n-aria-label="close"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <p class="help-sub" data-i18n="helpSubtitle"></p>
+    <div class="help-row"><svg aria-hidden="true"><use href="#i-plus"/></svg><div data-i18n-html="helpCreate"></div></div>
+    <div class="help-row"><svg aria-hidden="true"><use href="#i-drag"/></svg><div data-i18n-html="helpDrag"></div></div>
+    <div class="help-row"><svg aria-hidden="true"><use href="#i-clock"/></svg><div data-i18n-html="helpDue"></div></div>
+    <div class="help-row"><svg aria-hidden="true"><use href="#i-check"/></svg><div data-i18n-html="helpComplete"></div></div>
+    <div class="help-footer" data-i18n-html="helpFooter"></div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+  'use strict';
+  if (new URLSearchParams(location.search).get('film') === '1') {
+    const media = 'https://github.com/ysl6323/FloatNote/releases/download/v1.0.0/';
+    document.title = 'FloatNote · Your to-dos. In motion.';
+    document.documentElement.lang = 'en';
+    document.querySelector('meta[name="theme-color"]').content = '#111714';
+    const style = document.createElement('style');
+    style.textContent = `
+      body { background: #111714; }
+      .film-stage { position: fixed; inset: 0; background: #111714; color: #f4f3ed; }
+      .film-video { display: block; width: 100%; height: 100%; object-fit: contain; background: #111714; }
+      .film-tools { position: absolute; inset: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)); background: linear-gradient(#111714b3, transparent); transition: opacity .25s; }
+      .film-stage.playing:not(:hover):not(:focus-within) .film-tools { opacity: 0; }
+      .film-home { color: #f4f3ed; font-size: 18px; font-weight: 600; text-decoration: none; letter-spacing: .02em; }
+      .film-actions { display: flex; align-items: center; gap: 10px; }
+      .film-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 10px 16px; border: 1px solid #ffffff40; border-radius: 24px; color: #f4f3ed; background: #11171480; backdrop-filter: blur(10px); font-size: 14px; }
+      .film-button:hover { background: #37493f; }
+      .film-button:focus-visible, .film-home:focus-visible { outline: 2px solid #c6d5d8; outline-offset: 4px; }
+      .film-button svg { width: 18px; height: 18px; }
+      .film-start { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); min-height: 60px; padding: 15px 25px; font-size: 17px; box-shadow: 0 8px 40px #11171440; }
+      .film-start[hidden] { display: none; }
+      @media (max-width: 480px) { .film-tools { padding: 16px; } .film-button { padding: 10px 13px; } }
+    `;
+    document.head.append(style);
+    const stage = document.createElement('main');
+    stage.className = 'film-stage';
+    stage.setAttribute('aria-label', 'FloatNote film');
+    stage.innerHTML = `
+      <video class="film-video" aria-label="FloatNote — Your to-dos. In motion." controls autoplay muted playsinline preload="auto" controlslist="nodownload"></video>
+      <nav class="film-tools" aria-label="Film controls">
+        <a class="film-home" href="?lang=en">FloatNote</a>
+        <div class="film-actions">
+          <button class="film-button film-sound" type="button" aria-pressed="false">Sound on</button>
+          <button class="film-button film-fullscreen" type="button" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button>
+        </div>
+      </nav>
+      <button class="film-button film-start" type="button" aria-label="Play film"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 4 12 8-12 8Z"/></svg>Play</button>
+    `;
+    document.body.replaceChildren(stage);
+    const video = stage.querySelector('video');
+    const start = stage.querySelector('.film-start');
+    const sound = stage.querySelector('.film-sound');
+    video.poster = media + 'FloatNote.png';
+    video.src = media + 'FloatNote.mp4';
+    video.muted = true;
+    const fullscreen = () => {
+      if (document.fullscreenElement || video.webkitDisplayingFullscreen) return;
+      if (video.requestFullscreen) video.requestFullscreen().catch(() => {});
+      else if (video.webkitEnterFullscreen) { try { video.webkitEnterFullscreen(); } catch {} }
+    };
+    const play = () => { if (video.error) video.load(); const result = video.play(); if (result) result.catch(() => { start.hidden = false; }); };
+    const activate = () => { video.muted = false; play(); fullscreen(); };
+    start.addEventListener('click', activate);
+    sound.addEventListener('click', () => { video.muted = !video.muted; play(); fullscreen(); });
+    stage.querySelector('.film-fullscreen').addEventListener('click', () => { play(); fullscreen(); });
+    video.addEventListener('click', event => { if (event.clientY < video.getBoundingClientRect().bottom - 72) { video.muted = false; fullscreen(); } });
+    video.addEventListener('playing', () => { start.hidden = true; stage.classList.add('playing'); });
+    video.addEventListener('pause', () => { stage.classList.remove('playing'); });
+    video.addEventListener('ended', () => { stage.classList.remove('playing'); });
+    video.addEventListener('volumechange', () => { sound.textContent = video.muted ? 'Sound on' : 'Sound off'; sound.setAttribute('aria-pressed', String(!video.muted)); });
+    video.addEventListener('error', () => { start.hidden = false; start.textContent = 'Retry'; });
+    play();
+    return;
+  }
+  // Keep the original data key so updating the desktop file preserves notes.
+  const KEY = 'fujian.flowboard.v1';
+  const SETTINGS_KEY = KEY + '.settings';
+  const VERSION = 2;
+  const TARGET = 42;
+  const DEFAULT_ZONES = { zh: 'Asia/Shanghai', en: 'America/New_York' };
+  const ZONES = [
+    ['Asia/Shanghai', '北京时间', 'Beijing time'],
+    ['America/New_York', '美东时间', 'Eastern time'],
+    ['America/Chicago', '美国中部', 'US Central time'],
+    ['America/Denver', '美国山地', 'US Mountain time'],
+    ['America/Los_Angeles', '美国西部', 'Pacific time'],
+    ['Europe/London', '伦敦', 'London'],
+    ['Europe/Paris', '巴黎', 'Paris'],
+    ['Asia/Tokyo', '东京', 'Tokyo'],
+    ['Asia/Singapore', '新加坡', 'Singapore'],
+    ['Asia/Kolkata', '印度', 'India'],
+    ['Asia/Kathmandu', '尼泊尔', 'Nepal'],
+    ['Australia/Sydney', '悉尼', 'Sydney'],
+    ['Pacific/Auckland', '奥克兰', 'Auckland'],
+    ['UTC', '协调世界时', 'UTC']
+  ];
+  const COPY = {
+    zh: {
+      name: '浮笺', subtitle: 'FLOATNOTE / A CANVAS FOR YOUR DAYS',
+      philosophy: '时间让重要的事浮现。', newNote: '新建便签',
+      clockLabel: '当前时间', timeZone: '选择时区', timeZoneHeading: '给时间一个坐标',
+      timeZoneNote: '时钟、创建时间和截止时间都会按此时区显示。已设置的截止时刻保持不变。',
+      systemZone: '系统时区', restoreDefault: '恢复默认', apply: '应用时区',
+      backup: '导入 / 导出备份', help: '使用说明', close: '关闭',
+      boardLabel: '待办画布，双击空白处新建便签', finish: '优先级最高 · 终点线',
+      finishHint: '设定截止时间，在那一刻抵达这里', high: '高', low: '低',
+      emptyTitle: '给待办一张小小的便签', emptyDescription: '双击空白处，写下此刻想做的事',
+      emptyTip: '设定截止时间，让它随时间缓缓向上', active: '{n} 个待办',
+      localSave: '保存在本机', saveFailed: '请导出备份',
+      boardHint: '双击新建 · 拖动排序 · 右键完成', archived: '已完成',
+      archiveSubtitle: 'ARCHIVED TASKS', noteMenu: '这张便签', complete: '完成并归档',
+      edit: '编辑待办', setDeadline: '设置截止时间', deleteNote: '删除便签',
+      dueHeading: '什么时候到终点？', deadlineInput: '截止日期和时间',
+      inHour: '1 小时后', tonight: '今天结束前', tomorrow: '明天同一时间',
+      dueExplanation: '从当前位置匀速向上，在截止时刻抵达终点线。拖动时暂停，松开后从新位置继续。',
+      removeDeadline: '移除截止时间', confirmDeadline: '开始流动',
+      zoneContext: '按 {zone} 输入 · {offset}', zoneContextPlain: '按 {zone} 输入', invalidDate: '请选择有效的日期和时间。',
+      missingTime: '这个时间因夏令时切换而不存在，请选择另一个时间。',
+      repeatedTime: '这个时间出现两次，请选择一次。', firstOccurrence: '第一次 · {offset}',
+      secondOccurrence: '第二次 · {offset}', backupMenu: '本机数据',
+      exportBackup: '导出备份', importBackup: '导入备份',
+      helpHeading: '让事情，自然地浮上来', helpSubtitle: '一张安静的画布，留给每一件想完成的事。',
+      helpCreate: '<strong>双击空白处</strong>创建便签，直接写下待办。<br>Enter 完成编辑，Shift + Enter 换行。',
+      helpDrag: '<strong>拖动边缘、顶部或底部</strong>调整位置。<br>越靠上越优先，颜色从雾蓝渐变为淡赤。',
+      helpDue: '设定<strong>截止时间</strong>，便签会匀速向上。<br>拖动时暂停，松开后继续；不设置就静置。',
+      helpComplete: '<strong>右键 → 完成并归档</strong>，或点击小勾。<br>在右下角查看、恢复或删除已完成的事项。',
+      helpFooter: '数据保存在当前浏览器的本机存储。可导出备份用于迁移。<br>截止时间按顶部选定的时区输入，夏令时自动适用。<br>抵达终点线后仍保留，完成由你来决定。',
+      created: '{time} 创建', taskLabel: '待办：{title}', taskName: '待办名称',
+      placeholder: '写下一件想完成的事…', more: '更多操作',
+      dueTooltip: '截止于 {date} · 点击修改', still: '静置 · 未设截止时间',
+      arrived: '已抵达终点线', driftingMinutes: '流动中 · {n} 分钟',
+      driftingHours: '流动中 · {n} 小时', driftingDays: '流动中 · {n} 天',
+      untitled: '未命名待办', restore: '恢复到画布', deleteForever: '永久删除',
+      completedAt: '{date} 完成', archiveEmpty: '留给已经完成的事',
+      archiveEmptyHint: '右键便签，选择「完成并归档」',
+      toastComplete: '完成了。已收进右下角的归档', toastDelete: '便签已删除',
+      toastRestore: '已恢复到画布', toastRestoreExpired: '已恢复；截止时间已到，便签停在终点线',
+      toastDeleteArchived: '已从归档中删除', toastDue: '截止时间已设置，便签开始缓缓向上',
+      toastDueExpired: '截止时间已到，便签已抵达终点线', toastNoDue: '已移除截止时间，便签停在当前位置',
+      toastStorage: '无法自动保存，请用顶部按钮导出备份', toastExport: '备份已导出',
+      toastImport: '已合并 {n} 个待办，现有便签已保留', toastAlreadyImported: '备份中的事项已在画布中',
+      toastInvalidBackup: '无法读取备份，请选择浮笺导出的 JSON 文件',
+      toastZone: '已切换到 {zone}', languageLabel: '切换语言'
+    },
+    en: {
+      name: 'Floatnote', subtitle: 'A CANVAS FOR YOUR DAYS',
+      philosophy: 'Time brings what matters to the surface.', newNote: 'New note',
+      clockLabel: 'Current time', timeZone: 'Choose time zone', timeZoneHeading: 'Give time a place',
+      timeZoneNote: 'The clock, creation times and due dates use this zone. Existing deadlines keep the same instant.',
+      systemZone: 'Device time zone', restoreDefault: 'Reset to default', apply: 'Apply zone',
+      backup: 'Import / export backup', help: 'How it works', close: 'Close',
+      boardLabel: 'Task canvas. Double-click empty space to create a note.',
+      finish: 'Highest priority · Finish line', finishHint: 'Set a due date. Arrive here on time.',
+      high: 'High', low: 'Low', emptyTitle: 'Give a thought a little room.',
+      emptyDescription: 'Double-click anywhere to create a note.',
+      emptyTip: 'Add a due date and let time bring it upward.', active: '{n} active',
+      localSave: 'Saved on this device', saveFailed: 'Please export a backup',
+      boardHint: 'Double-click to create · Drag to prioritize · Right-click to complete',
+      archived: 'Archived tasks', archiveSubtitle: 'A LITTLE ROOM FOR WHAT IS NEXT',
+      noteMenu: 'This note', complete: 'Complete & archive', edit: 'Edit task',
+      setDeadline: 'Set due date', deleteNote: 'Delete note', dueHeading: 'When should it arrive?',
+      deadlineInput: 'Due date and time', inHour: 'In 1 hour', tonight: 'End of today',
+      tomorrow: 'This time tomorrow',
+      dueExplanation: 'This note drifts upward at a steady pace, arriving at its due time. Dragging pauses it; releasing starts it from its new position.',
+      removeDeadline: 'Remove due date', confirmDeadline: 'Set due date',
+      zoneContext: 'Enter in {zone} · {offset}', zoneContextPlain: 'Enter in {zone}', invalidDate: 'Choose a valid date and time.',
+      missingTime: 'This local time does not exist during the daylight-saving change. Choose another time.',
+      repeatedTime: 'This local time occurs twice. Choose an occurrence.',
+      firstOccurrence: 'First · {offset}', secondOccurrence: 'Second · {offset}',
+      backupMenu: 'Your local data', exportBackup: 'Export backup', importBackup: 'Import backup',
+      helpHeading: 'Let things rise in their own time.',
+      helpSubtitle: 'A quiet canvas for the things you want to finish.',
+      helpCreate: '<strong>Double-click empty space</strong> to create a note.<br>Enter finishes editing. Shift + Enter adds a line.',
+      helpDrag: '<strong>Drag by the edges, header or footer.</strong><br>Higher notes have higher priority. Blue becomes soft red.',
+      helpDue: 'Set a <strong>due date</strong> to drift toward the finish line.<br>Dragging pauses the note. Without a due date, it stays still.',
+      helpComplete: '<strong>Right-click → Complete & archive</strong>, or use the checkmark.<br>View, restore or delete finished tasks at the bottom right.',
+      helpFooter: 'Notes stay in this browser. Export a backup to move them.<br>Due dates use the selected time zone, including daylight saving.<br>Reaching the finish line does not complete a task. You decide.',
+      created: 'Created {time}', taskLabel: 'Task: {title}', taskName: 'Task name',
+      placeholder: 'Write something you want to finish…', more: 'More actions',
+      dueTooltip: 'Due {date} · Click to change', still: 'Still · No due date',
+      arrived: 'At the finish line', driftingMinutes: 'Drifting · {n} min',
+      driftingHours: 'Drifting · {n} hr', driftingDays: 'Drifting · {n} days',
+      untitled: 'Untitled task', restore: 'Restore to canvas', deleteForever: 'Delete permanently',
+      completedAt: 'Completed {date}', archiveEmpty: 'A place for things already done.',
+      archiveEmptyHint: 'Right-click a note and choose “Complete & archive”.',
+      toastComplete: 'Done. Filed away in the archive.', toastDelete: 'Note deleted.',
+      toastRestore: 'Restored to the canvas.', toastRestoreExpired: 'Restored. Its due date has passed, so it stays at the finish line.',
+      toastDeleteArchived: 'Removed from the archive.', toastDue: 'Due date set. This note is drifting upward.',
+      toastDueExpired: 'The due date has passed. This note is at the finish line.',
+      toastNoDue: 'Due date removed. This note stays where it is.',
+      toastStorage: 'Auto-save is unavailable. Please export a backup.', toastExport: 'Backup exported.',
+      toastImport: 'Merged {n} tasks. Your existing notes are safe.',
+      toastAlreadyImported: 'These tasks are already on the canvas.',
+      toastInvalidBackup: 'Could not read this backup. Choose a JSON file exported by Floatnote.',
+      toastZone: 'Now showing {zone}.', languageLabel: 'Choose language'
+    }
+  };
+
+  const $ = selector => document.querySelector(selector);
+  const board = $('#board'), menu = $('#contextMenu'), deadlinePopup = $('#deadlinePopup');
+  const backupMenu = $('#backupMenu'), timezonePopup = $('#timezonePopup');
+  const cards = new Map(), formatterCache = new Map();
+  const state = { todos: [], archive: [], archiveOpen: false };
+  const prefs = { language: 'zh', zones: { ...DEFAULT_ZONES } };
+  let drag = null, selectedId = null, deadlineId = null, saveTimer, toastTimer;
+  let lastStatusSecond = -1, lastClockSecond = -1, storageFailed = false;
+  let deadlineCandidates = [], preferredInstant = null;
+  const clamp = (v, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
+  const icon = name => '<svg aria-hidden="true"><use href="#i-' + name + '"/></svg>';
+  const uid = () => globalThis.crypto?.randomUUID?.() || 'todo-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
+  const getTodo = id => state.todos.find(todo => todo.id === id);
+  const validStamp = value => Number.isFinite(value) && value > 0 && value < 8640000000000000;
+  const zone = () => prefs.zones[prefs.language];
+  const t = (key, values = {}) => (COPY[prefs.language][key] || key).replace(/\{(\w+)\}/g, (_, name) => values[name] ?? '');
+  const zoneName = value => { const found = ZONES.find(item => item[0] === value); return found ? found[prefs.language === 'zh' ? 1 : 2] : value.replaceAll('_', ' '); };
+
+  /* Pure timezone helpers for Floatnote. No host-local Date parsing. */
+const zoneFormatterCache = new Map();
+function zoneFormatter(zone) {
+  if (!zoneFormatterCache.has(zone)) {
+    zoneFormatterCache.set(zone, new Intl.DateTimeFormat('en-GB-u-ca-gregory-nu-latn', {
+      timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
+    }));
+  }
+  return zoneFormatterCache.get(zone);
+}
+function zonedParts(stamp, zone) {
+  const p = {};
+  for (const part of zoneFormatter(zone).formatToParts(stamp)) {
+    if (part.type !== 'literal') p[part.type] = Number(part.value);
+  }
+  return p;
+}
+function wallEpoch(p) {
+  const d = new Date(0);
+  d.setUTCFullYear(p.year, p.month - 1, p.day);
+  d.setUTCHours(p.hour, p.minute, p.second || 0, 0);
+  return d.getTime();
+}
+function zonedInput(stamp, zone) {
+  const p = zonedParts(stamp, zone), pad = n => String(n).padStart(2, '0');
+  return `${String(p.year).padStart(4, '0')}-${pad(p.month)}-${pad(p.day)}T${pad(p.hour)}:${pad(p.minute)}`;
+}
+function parseWallInput(input) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(input);
+  if (!m) throw new RangeError('invalid-date');
+  const [year, month, day, hour, minute, second] = m.slice(1).map(x => Number(x || 0));
+  const p = {year, month, day, hour, minute, second};
+  if (year < 1 || month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59 || second > 59) throw new RangeError('invalid-date');
+  const d = new Date(wallEpoch(p));
+  if (d.getUTCFullYear() !== year || d.getUTCMonth() + 1 !== month || d.getUTCDate() !== day) throw new RangeError('invalid-date');
+  return p;
+}
+function possibleInstants(input, zone) {
+  const target = parseWallInput(input), wall = wallEpoch(target), offsets = new Set();
+  // Enumerate offsets around the requested calendar day; includes both sides of
+  // modern DST changes, fractional-hour offsets and full-day date-line changes.
+  for (let h = -48; h <= 48; h += 3) {
+    const probe = wall + h * 3600000;
+    offsets.add(wallEpoch(zonedParts(probe, zone)) - probe);
+  }
+  const candidates = [];
+  for (const offset of offsets) {
+    const candidate = wall - offset, p = zonedParts(candidate, zone);
+    if (['year', 'month', 'day', 'hour', 'minute', 'second'].every(k => p[k] === target[k])) candidates.push(candidate);
+  }
+  return [...new Set(candidates)].sort((a, b) => a - b);
+}
+function zonedInputToEpoch(input, zone, disambiguation = 'reject') {
+  const candidates = possibleInstants(input, zone);
+  if (!candidates.length) throw new RangeError('nonexistent-time');
+  if (candidates.length > 1 && disambiguation === 'reject') throw new RangeError('ambiguous-time');
+  return disambiguation === 'later' ? candidates[candidates.length - 1] : candidates[0];
+}
+function offsetLabel(stamp, zone) {
+  const instant = Math.floor(stamp / 1000) * 1000;
+  const minutes = (wallEpoch(zonedParts(instant, zone)) - instant) / 60000;
+  const sign = minutes < 0 ? '-' : '+', absolute = Math.abs(minutes);
+  return `UTC${sign}${String(Math.floor(absolute / 60)).padStart(2, '0')}:${String(absolute % 60).padStart(2, '0')}`;
+}
+
+
+  function format(stamp, options) {
+    const key = JSON.stringify([prefs.language, zone(), options]);
+    if (!formatterCache.has(key)) formatterCache.set(key, new Intl.DateTimeFormat(prefs.language === 'zh' ? 'zh-CN' : 'en-US', { timeZone: zone(), hourCycle: 'h23', ...options }));
+    return formatterCache.get(key).format(stamp);
+  }
+  const shortTime = stamp => format(stamp, { hour: '2-digit', minute: '2-digit' });
+  const fullTime = stamp => format(stamp, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const deadlineTime = stamp => format(stamp, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+  function showToast(message) {
+    clearTimeout(toastTimer); $('#toast').textContent = message; $('#toast').classList.add('show');
+    toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 3000);
+  }
+  function savePreferences() {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(prefs)); } catch { markStorageFailure(); }
+  }
+  function loadPreferences() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
+      if (saved?.language === 'en') prefs.language = 'en';
+      for (const lang of ['zh', 'en']) {
+        const value = saved?.zones?.[lang];
+        if (typeof value === 'string') { try { zoneFormatter(value); prefs.zones[lang] = value; } catch {} }
+      }
+    } catch {}
+    const queryLanguage = new URLSearchParams(location.search).get('lang');
+    if (queryLanguage === 'en' || queryLanguage === 'zh') prefs.language = queryLanguage;
+  }
+  function sanitizeTodo(todo) {
+    if (!todo || typeof todo.id !== 'string' || typeof todo.title !== 'string' || !validStamp(todo.createdAt)) return null;
+    return { id: todo.id.slice(0, 120), title: todo.title.slice(0, 4000), createdAt: todo.createdAt,
+      deadline: validStamp(todo.deadline) ? todo.deadline : null, x: clamp(Number(todo.x) || 0), y: clamp(Number(todo.y) || 0),
+      flowFrom: clamp(Number.isFinite(todo.flowFrom) ? todo.flowFrom : Number(todo.y) || 0),
+      flowStart: validStamp(todo.flowStart) ? todo.flowStart : Date.now(),
+      completedAt: validStamp(todo.completedAt) ? todo.completedAt : null,
+      completedColor: typeof todo.completedColor === 'string' && /^rgb\(\d+, \d+, \d+\)$/.test(todo.completedColor) ? todo.completedColor : null };
+  }
+  function markStorageFailure() {
+    if (!storageFailed) { storageFailed = true; $('#saveText').textContent = t('saveFailed'); showToast(t('toastStorage')); }
+  }
+  function load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (saved && Array.isArray(saved.todos) && Array.isArray(saved.archive)) {
+        state.todos = saved.todos.map(sanitizeTodo).filter(Boolean); state.archive = saved.archive.map(sanitizeTodo).filter(Boolean);
+        state.archiveOpen = !!saved.archiveOpen;
+        const ids = new Set();
+        for (const name of ['todos', 'archive']) state[name] = state[name].filter(todo => !ids.has(todo.id) && ids.add(todo.id));
+      }
+    } catch { markStorageFailure(); }
+  }
+  function saveNow() {
+    clearTimeout(saveTimer);
+    try { localStorage.setItem(KEY, JSON.stringify({ version: VERSION, ...state })); storageFailed = false; $('#saveText').textContent = t('localSave'); }
+    catch { markStorageFailure(); }
+  }
+  function save() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 220); }
+
+  // Store normalized coordinates and a time anchor. Reopening catches up naturally.
+  function effectiveY(todo, time = Date.now()) {
+    if (!todo.deadline || drag?.id === todo.id) return clamp(todo.y);
+    if (time >= todo.deadline || todo.deadline <= todo.flowStart) return 0;
+    return clamp(todo.flowFrom * (1 - clamp((time - todo.flowStart) / (todo.deadline - todo.flowStart))));
+  }
+  function colorFor(y) {
+    const stops = [[232, 196, 189], [231, 217, 195], [210, 220, 209], [196, 216, 230]];
+    const q = clamp(y) * 3, i = Math.min(2, Math.floor(q)), f = q - i;
+    return 'rgb(' + stops[i].map((value, k) => Math.round(value + (stops[i + 1][k] - value) * f)).join(', ') + ')';
+  }
+  function bounds(card) {
+    const margin = window.innerWidth <= 520 ? 23 : 52;
+    return { left: margin, right: Math.max(margin, board.clientWidth - card.offsetWidth - margin),
+      top: TARGET, bottom: Math.max(TARGET, board.clientHeight - card.offsetHeight - 78) };
+  }
+  function updatePosition(todo, card, time = Date.now()) {
+    const b = bounds(card), y = effectiveY(todo, time);
+    card.style.left = (b.left + (b.right - b.left) * clamp(todo.x)) + 'px';
+    card.style.top = (b.top + (b.bottom - b.top) * y) + 'px';
+    card.style.setProperty('--note-color', colorFor(y)); card.style.zIndex = String(10 + Math.round((1 - y) * 500));
+  }
+  function remainingText(todo, time) {
+    if (!todo.deadline) return t('still');
+    const remaining = todo.deadline - time;
+    if (remaining <= 0) return t('arrived');
+    const minutes = Math.ceil(remaining / 60000);
+    if (minutes < 60) return t('driftingMinutes', { n: minutes });
+    if (minutes < 1440) return t('driftingHours', { n: Math.ceil(minutes / 60) });
+    return t('driftingDays', { n: Math.ceil(minutes / 1440) });
+  }
+  function updateStatus(todo, card, time = Date.now()) {
+    card.classList.toggle('arrived', !!todo.deadline && time >= todo.deadline);
+    const due = card.querySelector('.ddl-btn'); due.classList.toggle('has-ddl', !!todo.deadline);
+    due.querySelector('span').textContent = todo.deadline ? deadlineTime(todo.deadline) : t('setDeadline');
+    due.title = todo.deadline ? t('dueTooltip', { date: fullTime(todo.deadline) + ' · ' + zoneName(zone()) }) : t('setDeadline');
+    due.setAttribute('aria-label', due.title); card.querySelector('.motion-label span').textContent = remainingText(todo, time);
+  }
+  function updateCardLabels(todo, card) {
+    const created = card.querySelector('.created');
+    created.textContent = t('created', { time: shortTime(todo.createdAt) });
+    created.dateTime = new Date(todo.createdAt).toISOString();
+    created.title = t('created', { time: fullTime(todo.createdAt) + ' · ' + zoneName(zone()) });
+    card.setAttribute('aria-label', t('taskLabel', { title: todo.title || t('untitled') }));
+    const title = card.querySelector('.note-title'); title.dataset.placeholder = t('placeholder'); title.setAttribute('aria-label', t('taskName'));
+    for (const [selector, key] of [['.complete-btn', 'complete'], ['.more-btn', 'more']]) {
+      const button = card.querySelector(selector); button.title = t(key); button.setAttribute('aria-label', t(key));
+    }
+    updateStatus(todo, card); updatePosition(todo, card);
+  }
+  function makeCard(todo, isNew = false) {
+    const card = document.createElement('article'); card.className = 'note' + (isNew ? ' new' : ''); card.dataset.id = todo.id;
+    card.innerHTML = '<div class="note-head"><time class="created"></time><button class="ddl-btn" type="button">' + icon('clock') + '<span></span></button></div><div class="note-title" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="false"></div><div class="note-footer"><div class="motion-label"><i class="dot"></i><span></span></div><div class="note-actions"><button class="note-action complete-btn" type="button">' + icon('check') + '</button><button class="note-action more-btn" type="button">' + icon('more') + '</button></div></div><div class="note-grip"></div>';
+    const title = card.querySelector('.note-title'); title.textContent = todo.title;
+    let beforeEdit = todo.title;
+    title.addEventListener('focus', () => { beforeEdit = todo.title; });
+    title.addEventListener('input', () => { todo.title = title.innerText.replace(/\u00a0/g, ' ').slice(0, 4000); card.setAttribute('aria-label', t('taskLabel', { title: todo.title })); updatePosition(todo, card); save(); });
+    title.addEventListener('blur', () => { todo.title = title.innerText.trim().slice(0, 4000); title.textContent = todo.title; updatePosition(todo, card); save(); });
+    title.addEventListener('keydown', event => {
+      if (event.isComposing) return;
+      if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); title.blur(); }
+      if (event.key === 'Escape') { event.preventDefault(); todo.title = beforeEdit; title.textContent = beforeEdit; title.blur(); }
+    });
+    title.addEventListener('paste', event => { event.preventDefault(); const text = (event.clipboardData?.getData('text/plain') || '').slice(0, 4000); document.execCommand('insertText', false, text); });
+    card.querySelector('.ddl-btn').addEventListener('click', () => openDeadline(todo.id, card.querySelector('.ddl-btn')));
+    card.querySelector('.complete-btn').addEventListener('click', () => complete(todo.id));
+    card.querySelector('.more-btn').addEventListener('click', event => openMenu(todo.id, event.clientX, event.clientY));
+    card.addEventListener('contextmenu', event => { event.preventDefault(); title.blur(); openMenu(todo.id, event.clientX, event.clientY); });
+    card.addEventListener('pointerdown', event => startDrag(event, todo, card));
+    cards.set(todo.id, card); board.appendChild(card); updateCardLabels(todo, card);
+    if (isNew) setTimeout(() => card.classList.remove('new'), 300);
+    return card;
+  }
+  function updateCounts() {
+    $('#activeCount').textContent = state.todos.length;
+    $('#activeCountLabel').textContent = t('active', { n: state.todos.length });
+    $('#archiveCount').textContent = state.archive.length;
+    $('#emptyState').classList.toggle('hidden', state.todos.length > 0);
+  }
+  function renderAll() { cards.forEach(card => card.remove()); cards.clear(); state.todos.forEach(todo => makeCard(todo)); updateCounts(); renderArchive(); }
+  function focusTitle(card) {
+    const title = card.querySelector('.note-title'); title.focus();
+    const selection = window.getSelection(), range = document.createRange();
+    range.selectNodeContents(title); range.collapse(false); selection.removeAllRanges(); selection.addRange(range);
+  }
+  function create(clientX, clientY) {
+    closePopups(); const stamp = Date.now();
+    const todo = { id: uid(), title: '', createdAt: stamp, deadline: null, x: .5, y: .6, flowFrom: .6, flowStart: stamp, completedAt: null, completedColor: null };
+    state.todos.push(todo); const card = makeCard(todo, true), b = bounds(card), rect = board.getBoundingClientRect();
+    if (Number.isFinite(clientX)) {
+      todo.x = clamp((clientX - rect.left - card.offsetWidth / 2 - b.left) / Math.max(1, b.right - b.left));
+      todo.y = clamp((clientY - rect.top - 33 - b.top) / Math.max(1, b.bottom - b.top));
+    } else {
+      const offset = (state.todos.length - 1) % 6; todo.x = clamp(.4 + offset * .045); todo.y = clamp(.53 + offset * .035);
+    }
+    todo.flowFrom = todo.y; updatePosition(todo, card); updateCounts(); save(); requestAnimationFrame(() => focusTitle(card));
+  }
+  function startDrag(event, todo, card) {
+    if (event.button !== 0 || event.target.closest('button,input,[contenteditable]')) return;
+    closePopups(); event.preventDefault(); document.activeElement?.blur(); todo.y = effectiveY(todo);
+    const rect = card.getBoundingClientRect();
+    drag = { id: todo.id, card, pointerId: event.pointerId, dx: event.clientX - rect.left, dy: event.clientY - rect.top };
+    card.setPointerCapture(event.pointerId); card.classList.add('dragging');
+  }
+  function moveDrag(event) {
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    const todo = getTodo(drag.id); if (!todo) return;
+    const rect = board.getBoundingClientRect(), b = bounds(drag.card);
+    todo.x = clamp((event.clientX - rect.left - drag.dx - b.left) / Math.max(1, b.right - b.left));
+    todo.y = clamp((event.clientY - rect.top - drag.dy - b.top) / Math.max(1, b.bottom - b.top)); updatePosition(todo, drag.card);
+  }
+  function finishDrag() {
+    if (!drag) return;
+    const todo = getTodo(drag.id), card = drag.card, pointerId = drag.pointerId;
+    if (todo) { todo.flowFrom = todo.y; todo.flowStart = Date.now(); }
+    drag = null; card.classList.remove('dragging');
+    if (card.hasPointerCapture(pointerId)) card.releasePointerCapture(pointerId); save();
+  }
+  function complete(id) {
+    const todo = getTodo(id); if (!todo) return;
+    finishDrag(); document.activeElement?.blur(); todo.y = effectiveY(todo); todo.completedAt = Date.now(); todo.completedColor = colorFor(todo.y);
+    state.todos = state.todos.filter(item => item.id !== id); state.archive.push(todo);
+    cards.get(id)?.remove(); cards.delete(id); closePopups(); updateCounts(); renderArchive(); save(); showToast(t('toastComplete'));
+  }
+  function removeTodo(id) { finishDrag(); state.todos = state.todos.filter(todo => todo.id !== id); cards.get(id)?.remove(); cards.delete(id); closePopups(); updateCounts(); save(); showToast(t('toastDelete')); }
+  function restore(id) {
+    const todo = state.archive.find(item => item.id === id); if (!todo) return;
+    state.archive = state.archive.filter(item => item.id !== id); todo.completedAt = null; todo.completedColor = null;
+    todo.y = .9; todo.flowFrom = todo.y; todo.flowStart = Date.now(); state.todos.push(todo); makeCard(todo, true);
+    updateCounts(); renderArchive(); save(); showToast(t(todo.deadline && todo.deadline <= Date.now() ? 'toastRestoreExpired' : 'toastRestore'));
+  }
+  function renderArchive() {
+    const panel = $('#archiveBody'); panel.replaceChildren(); $('#archive').classList.toggle('open', state.archiveOpen);
+    panel.hidden = !state.archiveOpen; $('#archiveToggle').setAttribute('aria-expanded', String(state.archiveOpen));
+    if (!state.archive.length) {
+      const empty = document.createElement('div'); empty.className = 'archive-empty';
+      empty.innerHTML = icon('archive') + '<div></div><p></p>'; empty.querySelector('div').textContent = t('archiveEmpty'); empty.querySelector('p').textContent = t('archiveEmptyHint'); panel.appendChild(empty); return;
+    }
+    [...state.archive].reverse().forEach(todo => {
+      const item = document.createElement('div'); item.className = 'archive-item';
+      item.innerHTML = '<div class="archive-swatch"></div><div class="archive-copy"><div class="archive-title"></div><div class="archive-time"></div></div><div class="archive-actions"><button class="archive-action restore-btn">' + icon('restore') + '</button><button class="archive-action remove-btn">' + icon('delete') + '</button></div>';
+      item.querySelector('.archive-swatch').style.background = todo.completedColor || colorFor(todo.y);
+      item.querySelector('.archive-title').textContent = todo.title || t('untitled'); item.querySelector('.archive-title').title = todo.title || t('untitled');
+      item.querySelector('.archive-time').textContent = t('completedAt', { date: deadlineTime(todo.completedAt || todo.createdAt) });
+      for (const [selector, key] of [['.restore-btn', 'restore'], ['.remove-btn', 'deleteForever']]) { const button = item.querySelector(selector); button.title = t(key); button.setAttribute('aria-label', t(key)); }
+      item.querySelector('.restore-btn').addEventListener('click', () => restore(todo.id));
+      item.querySelector('.remove-btn').addEventListener('click', () => { state.archive = state.archive.filter(item => item.id !== todo.id); renderArchive(); updateCounts(); save(); showToast(t('toastDeleteArchived')); });
+      panel.appendChild(item);
+    });
+  }
+  function closePopups() {
+    for (const popup of [menu, deadlinePopup, backupMenu, timezonePopup]) popup.hidden = true;
+    cards.forEach(card => card.querySelector('.ddl-btn').classList.remove('active'));
+    selectedId = null; deadlineId = null;
+    $('#timezoneBtn').setAttribute('aria-expanded', 'false');
+  }
+  function positionPopup(popup, x, y) {
+    popup.style.left = clamp(x, 10, Math.max(10, window.innerWidth - popup.offsetWidth - 10)) + 'px';
+    popup.style.top = clamp(y, 10, Math.max(10, window.innerHeight - popup.offsetHeight - 10)) + 'px';
+  }
+  function openMenu(id, x, y) { closePopups(); selectedId = id; menu.hidden = false; positionPopup(menu, x, y); menu.querySelector('button').focus({ preventScroll: true }); }
+
+  function applyLocale() {
+    document.documentElement.lang = prefs.language === 'zh' ? 'zh-CN' : 'en';
+    document.title = prefs.language === 'zh' ? '浮笺 · Floatnote' : 'Floatnote · A canvas for your days';
+    document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-html]').forEach(element => { element.innerHTML = t(element.dataset.i18nHtml); });
+    for (const attr of ['title', 'aria-label']) document.querySelectorAll('[data-i18n-' + attr + ']').forEach(element => element.setAttribute(attr, t(element.getAttribute('data-i18n-' + attr))));
+    document.querySelectorAll('[data-language]').forEach(button => { const active = button.dataset.language === prefs.language; button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); });
+    $('#saveText').textContent = t(storageFailed ? 'saveFailed' : 'localSave');
+    state.todos.forEach(todo => updateCardLabels(todo, cards.get(todo.id)));
+    updateCounts(); renderArchive(); lastClockSecond = -1; updateClock(Date.now());
+  }
+  function updateClock(time) {
+    const second = Math.floor(time / 1000); if (second === lastClockSecond) return;
+    lastClockSecond = second;
+    const clock = $('#clockTime'); clock.textContent = format(time, { hour: '2-digit', minute: '2-digit', second: '2-digit' }); clock.dateTime = new Date(time).toISOString();
+    $('#todayLabel').textContent = format(time, { month: 'short', day: 'numeric', weekday: 'short' });
+    $('#clockZoneName').textContent = zoneName(zone()); $('#clockZoneOffset').textContent = offsetLabel(time, zone());
+  }
+  function openTimezone() {
+    const wasOpen = !timezonePopup.hidden; closePopups(); if (wasOpen) return;
+    const select = $('#timezoneSelect'); select.replaceChildren();
+    const deviceZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const choices = [...ZONES];
+    for (const value of [deviceZone, zone()]) if (!choices.some(item => item[0] === value)) choices.push([value, value, value]);
+    for (const choice of choices) {
+      const option = document.createElement('option'); option.value = choice[0];
+      option.textContent = zoneName(choice[0]) + ' · ' + offsetLabel(Date.now(), choice[0]) + (choice[0] === deviceZone ? ' · ' + t('systemZone') : ''); select.appendChild(option);
+    }
+    select.value = zone(); timezonePopup.hidden = false; $('#timezoneBtn').setAttribute('aria-expanded', 'true');
+    const rect = $('#timezoneBtn').getBoundingClientRect(); positionPopup(timezonePopup, rect.left - 60, rect.bottom + 12); select.focus({ preventScroll: true });
+  }
+  function setZone(value) {
+    prefs.zones[prefs.language] = value; closePopups(); savePreferences(); applyLocale(); showToast(t('toastZone', { zone: zoneName(value) }));
+  }
+
+  // datetime-local has no zone. Resolve its wall time explicitly, including DST.
+  function validateDeadline() {
+    const input = $('#deadlineInput'), error = $('#deadlineError'), ambiguity = $('#ambiguityControl');
+    ambiguity.hidden = true; error.hidden = true; deadlineCandidates = [];
+    $('#deadlineZone').textContent = t('zoneContextPlain', { zone: zoneName(zone()) });
+    $('#confirmDeadline').disabled = true;
+    if (!input.value) return;
+    try { deadlineCandidates = possibleInstants(input.value, zone()); }
+    catch { error.textContent = t('invalidDate'); error.hidden = false; return; }
+    if (!deadlineCandidates.length) { error.textContent = t('missingTime'); error.hidden = false; return; }
+    if (deadlineCandidates.length > 1) {
+      ambiguity.hidden = false;
+      const select = $('#ambiguitySelect'), previous = Number(select.value); select.replaceChildren();
+      deadlineCandidates.forEach((instant, index) => {
+        const option = document.createElement('option'); option.value = String(instant);
+        option.textContent = t(index === 0 ? 'firstOccurrence' : 'secondOccurrence', { offset: offsetLabel(instant, zone()) }); select.appendChild(option);
+      });
+      const preferred = deadlineCandidates.includes(preferredInstant) ? preferredInstant : deadlineCandidates.includes(previous) ? previous : deadlineCandidates[0];
+      select.value = String(preferred);
+    }
+    $('#confirmDeadline').disabled = false;
+    const shownInstant = deadlineCandidates.length > 1 ? Number($('#ambiguitySelect').value) : deadlineCandidates[0];
+    $('#deadlineZone').textContent = t('zoneContext', { zone: zoneName(zone()), offset: offsetLabel(shownInstant, zone()) });
+  }
+  function openDeadline(id, anchor) {
+    closePopups(); const todo = getTodo(id); if (!todo) return;
+    deadlineId = id; preferredInstant = todo.deadline;
+    $('#deadlineInput').value = zonedInput(todo.deadline || Math.ceil((Date.now() + 3600000) / 60000) * 60000, zone());
+    $('#deadlineZone').textContent = t('zoneContext', { zone: zoneName(zone()), offset: offsetLabel(todo.deadline || Date.now(), zone()) });
+    $('#clearDeadline').disabled = !todo.deadline; deadlinePopup.hidden = false; validateDeadline();
+    anchor.classList.add('active'); const rect = anchor.getBoundingClientRect(); positionPopup(deadlinePopup, rect.right - deadlinePopup.offsetWidth, rect.bottom + 8);
+    $('#deadlineInput').focus({ preventScroll: true });
+  }
+  function setDeadline(id, value) {
+    const todo = getTodo(id); if (!todo) return;
+    todo.y = effectiveY(todo); todo.deadline = value; todo.flowFrom = todo.y; todo.flowStart = Date.now();
+    const card = cards.get(id); if (card) { updatePosition(todo, card); updateStatus(todo, card); }
+    closePopups(); save(); showToast(t(value ? value <= Date.now() ? 'toastDueExpired' : 'toastDue' : 'toastNoDue'));
+  }
+  function quickDeadline(mode) {
+    const stamp = Date.now(); let input;
+    if (mode === 'hour') {
+      preferredInstant = Math.ceil((stamp + 3600000) / 60000) * 60000; input = zonedInput(preferredInstant, zone());
+    } else if (mode === 'tonight') {
+      preferredInstant = null; input = zonedInput(stamp, zone()).slice(0, 10) + 'T23:59';
+    } else {
+      // Add a calendar day in the chosen zone, so DST preserves the clock time.
+      preferredInstant = null;
+      const parts = zonedParts(stamp, zone()), calendar = new Date(wallEpoch(parts));
+      calendar.setUTCDate(calendar.getUTCDate() + 1); input = zonedInput(calendar.getTime(), 'UTC');
+    }
+    $('#deadlineInput').value = input; validateDeadline();
+  }
+  menu.addEventListener('click', event => {
+    const action = event.target.closest('[data-action]')?.dataset.action, id = selectedId;
+    if (!action || !id) return;
+    if (action === 'complete') complete(id);
+    if (action === 'delete') removeTodo(id);
+    if (action === 'edit') { closePopups(); const card = cards.get(id); if (card) focusTitle(card); }
+    if (action === 'deadline') { const card = cards.get(id); if (card) openDeadline(id, card.querySelector('.ddl-btn')); }
+  });
+  $('#deadlineInput').addEventListener('input', () => { preferredInstant = null; validateDeadline(); });
+  $('#ambiguitySelect').addEventListener('change', () => { preferredInstant = Number($('#ambiguitySelect').value); validateDeadline(); });
+  deadlinePopup.addEventListener('submit', event => {
+    event.preventDefault(); validateDeadline(); if (!deadlineCandidates.length) return;
+    const instant = deadlineCandidates.length > 1 ? Number($('#ambiguitySelect').value) : deadlineCandidates[0];
+    if (validStamp(instant)) setDeadline(deadlineId, instant);
+  });
+  $('#closeDeadline').addEventListener('click', closePopups);
+  $('#clearDeadline').addEventListener('click', () => setDeadline(deadlineId, null));
+  deadlinePopup.querySelectorAll('[data-time]').forEach(button => button.addEventListener('click', () => quickDeadline(button.dataset.time)));
+  timezonePopup.addEventListener('submit', event => { event.preventDefault(); setZone($('#timezoneSelect').value); });
+  $('#timezoneBtn').addEventListener('click', openTimezone);
+  $('#closeTimezone').addEventListener('click', closePopups);
+  $('#resetTimezone').addEventListener('click', () => { $('#timezoneSelect').value = DEFAULT_ZONES[prefs.language]; });
+  document.querySelectorAll('[data-language]').forEach(button => button.addEventListener('click', () => {
+    if (prefs.language === button.dataset.language) return;
+    document.activeElement?.blur(); finishDrag(); closePopups(); prefs.language = button.dataset.language;
+    savePreferences(); applyLocale();
+  }));
+  board.addEventListener('dblclick', event => { if (!event.target.closest('.note')) create(event.clientX, event.clientY); });
+  document.addEventListener('pointermove', moveDrag);
+  document.addEventListener('pointerup', event => { if (drag?.pointerId === event.pointerId) finishDrag(); });
+  document.addEventListener('pointercancel', event => { if (drag?.pointerId === event.pointerId) finishDrag(); });
+  window.addEventListener('blur', finishDrag);
+  $('#addBtn').addEventListener('click', () => create());
+  $('#archiveToggle').addEventListener('click', () => { state.archiveOpen = !state.archiveOpen; renderArchive(); save(); });
+  document.addEventListener('pointerdown', event => { if (!event.target.closest('.popup,.ddl-btn,.more-btn,#backupBtn,#timezoneBtn')) closePopups(); });
+  window.addEventListener('resize', () => { closePopups(); state.todos.forEach(todo => updatePosition(todo, cards.get(todo.id))); });
+  const helpOverlay = $('#helpOverlay');
+  function closeHelp() { helpOverlay.hidden = true; $('#helpBtn').focus(); }
+  $('#helpBtn').addEventListener('click', () => { closePopups(); helpOverlay.hidden = false; $('#closeHelp').focus(); });
+  $('#closeHelp').addEventListener('click', closeHelp);
+  helpOverlay.addEventListener('click', event => { if (event.target === helpOverlay) closeHelp(); });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { if (!helpOverlay.hidden) closeHelp(); else closePopups(); }
+    if (event.key === 'Tab' && !helpOverlay.hidden) { event.preventDefault(); $('#closeHelp').focus(); }
+    if (!menu.hidden && ['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+      event.preventDefault(); const buttons = [...menu.querySelectorAll('button')]; let index = buttons.indexOf(document.activeElement);
+      index = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length; buttons[index].focus();
+    }
+  });
+  $('#backupBtn').addEventListener('click', () => {
+    const wasOpen = !backupMenu.hidden; closePopups(); if (!wasOpen) { backupMenu.hidden = false; const rect = $('#backupBtn').getBoundingClientRect(); positionPopup(backupMenu, rect.right - backupMenu.offsetWidth, rect.bottom + 9); }
+  });
+  $('#exportBtn').addEventListener('click', () => {
+    finishDrag(); document.activeElement?.blur(); saveNow();
+    const data = JSON.stringify({ format: 'flowboard-backup', application: 'Floatnote', version: VERSION, exportedAt: Date.now(), ...state }, null, 2);
+    const url = URL.createObjectURL(new Blob([data], { type: 'application/json;charset=utf-8' })), link = document.createElement('a');
+    link.href = url; link.download = 'Floatnote-backup-' + zonedInput(Date.now(), zone()).slice(0, 10) + '.json';
+    document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    closePopups(); showToast(t('toastExport'));
+  });
+  $('#importBtn').addEventListener('click', () => { closePopups(); $('#importFile').click(); });
+  $('#importFile').addEventListener('change', async event => {
+    const file = event.target.files?.[0]; if (!file) return;
+    try {
+      if (file.size > 10000000) throw new Error('oversized-backup');
+      const data = JSON.parse(await file.text());
+      if (data.format !== 'flowboard-backup' || !Array.isArray(data.todos) || !Array.isArray(data.archive)) throw new Error('invalid-backup');
+      const ids = new Set([...state.todos, ...state.archive].map(todo => todo.id)); let added = 0;
+      for (const name of ['todos', 'archive']) for (const raw of data[name]) { const todo = sanitizeTodo(raw); if (todo && !ids.has(todo.id)) { state[name].push(todo); ids.add(todo.id); added++; } }
+      renderAll(); save(); showToast(t(added ? 'toastImport' : 'toastAlreadyImported', { n: added }));
+    } catch { showToast(t('toastInvalidBackup')); }
+    finally { event.target.value = ''; }
+  });
+  window.addEventListener('pagehide', () => { finishDrag(); saveNow(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { finishDrag(); saveNow(); } });
+  function frame() {
+    const time = Date.now(), second = Math.floor(time / 1000), statusDue = second !== lastStatusSecond;
+    updateClock(time);
+    state.todos.forEach(todo => { const card = cards.get(todo.id); if (card) { if (todo.deadline || drag?.id === todo.id) updatePosition(todo, card, time); if (statusDue) updateStatus(todo, card, time); } });
+    if (statusDue) lastStatusSecond = second;
+    requestAnimationFrame(frame);
+  }
+  loadPreferences(); load(); renderAll(); applyLocale(); requestAnimationFrame(frame);
+})();
+
+</script>
+</body>
+</html>
